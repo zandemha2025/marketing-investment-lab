@@ -10,4 +10,8 @@ Date: 2026-10-11. Public GitHub Pages URL loaded in installed Chromium/Browse wi
 
 Screenshots: [desktop](desktop.png), [mobile](mobile.png).
 
-Keyboard, import and export follow-up results are recorded in the final verification update below. No real-device Safari/Firefox, screen-reader or load testing is claimed.
+No real-device Safari/Firefox, screen-reader or load testing is claimed.
+
+## Export and keyboard verification
+
+Actual live export Blob contents captured and saved as [sample memo](sample-export.md) and [scenario JSON](sample-export.json). Memo includes sensitivity and experiment observations. Repeated exports produce valid content. Keyboard Tab from budget reaches reserve. Mobile table scroll is contained. Invalid inputs clear the forecast and block exports.

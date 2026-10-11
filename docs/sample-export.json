@@ -1,0 +1,36 @@
+{
+  "budget": 30000,
+  "reserve": 10,
+  "acv": 12000,
+  "margin": 80,
+  "months": 12,
+  "channels": [
+    {
+      "name": "Search",
+      "weight": 45,
+      "cpc": 8,
+      "lead": 5,
+      "qualified": 35,
+      "win": 18,
+      "cap": 16000
+    },
+    {
+      "name": "Paid social",
+      "weight": 30,
+      "cpc": 5,
+      "lead": 3,
+      "qualified": 25,
+      "win": 12,
+      "cap": 12000
+    },
+    {
+      "name": "Partner placements",
+      "weight": 25,
+      "cpc": 6,
+      "lead": 4,
+      "qualified": 40,
+      "win": 20,
+      "cap": 10000
+    }
+  ]
+}
