@@ -1,0 +1,12 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {demo,forecast,experiment,memo} from './model.js';
+test('funnel identity and contribution',()=>{const s={budget:1000,reserve:0,acv:1200,margin:50,months:12,channels:[{name:'one',weight:1,cpc:10,lead:20,qualified:50,win:10,cap:1000}]};const f=forecast(s);assert.equal(f.clicks,100);assert.equal(f.leads,20);assert.equal(f.customers,1);assert.equal(f.contribution,-400);assert.equal(f.payback,20);assert.equal(f.cac,1000);});
+test('reserve and channel ceilings conserve budget',()=>{const f=forecast({...demo,channels:demo.channels.map(c=>({...c,cap:1000}))});assert.equal(f.spend,3000);assert.equal(f.unallocated,27000);});
+test('zero spend has no undefined arithmetic',()=>{const f=forecast({...demo,budget:0});assert.equal(f.cac,null);assert.equal(f.payback,null);assert.equal(f.contribution,0);});
+test('downside reduces contribution',()=>assert.ok(forecast(demo,.8,1.2).contribution<forecast(demo).contribution));
+test('invalid economic inputs rejected',()=>{for(const s of [{...demo,reserve:101},{...demo,margin:-1},{...demo,budget:NaN},{...demo,months:13},{...demo,channels:demo.channels.map(c=>({...c,cpc:0}))}])assert.throws(()=>forecast(s));});
+const sample={aN:100,aX:5,bN:100,bX:10,mde:2,complete:true,guardrail:true};
+test('5/100 vs 10/100 is inconclusive',()=>{const e=experiment(sample);assert.ok(e.low<0&&e.high>0);assert.match(e.verdict,/Inconclusive/);assert.ok(Math.abs(e.diff-.05)<1e-12);});
+test('window and guardrail gates override apparent lift',()=>{assert.match(experiment({...sample,aN:10000,aX:500,bN:10000,bX:1500,complete:false}).verdict,/Wait/);assert.match(experiment({...sample,guardrail:false}).verdict,/Hold/);});
+test('strong fixed-window lift clears practical gate',()=>assert.match(experiment({...sample,aN:10000,aX:500,bN:10000,bX:1500}).verdict,/Candidate/));
+test('invalid experiment counts rejected',()=>{assert.throws(()=>experiment({...sample,aX:101}));assert.throws(()=>experiment({...sample,aN:0}));});
+test('memo records assumptions and exact inputs',()=>{const f=forecast(demo),e=experiment(sample),m=memo(demo,f,e);assert.match(m,/no measured customer results/);assert.match(m,/"budget": 30000/);assert.match(m,/Inconclusive/);});
