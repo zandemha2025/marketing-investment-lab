@@ -15,7 +15,7 @@ export function experiment({aN,aX,bN,bX,mde,complete,guardrail}){
  const a=aX/aN,b=bX/bN,diff=b-a;
  // shortcut: Newcombe interval from independent Wilson bounds; replace with sequential/cluster methods for other designs.
  const wilson=(x,n)=>{const p=x/n,z=1.96,den=1+z*z/n,center=(p+z*z/(2*n))/den,half=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n))/den;return [center-half,center+half];};
- const [al,au]=wilson(aX,aN),[bl,bu]=wilson(bX,bN);const low=diff-Math.sqrt((a-al)**2+(bu-b)**2),high=diff+Math.sqrt((au-a)**2+(b-bl)**2);
+ const [al,au]=wilson(aX,aN),[bl,bu]=wilson(bX,bN);const low=diff-Math.sqrt((au-a)**2+(b-bl)**2),high=diff+Math.sqrt((a-al)**2+(bu-b)**2);
  const verdict=!complete?'Wait: observation window incomplete':!guardrail?'Hold: guardrail failed':low>threshold?'Candidate to scale: interval clears practical threshold':high<0?'Stop: treatment likely harms conversion':'Inconclusive: collect planned evidence';
  return {a,b,diff,low,high,threshold,verdict};
 }
