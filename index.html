@@ -1,1 +1,153 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Investment Lab · Marketing decisions under uncertainty</title><meta name="description" content="Allocate a marketing budget, compare funnel scenarios and interpret a fixed-window experiment with transparent assumptions."><link rel="stylesheet" href="style.css"></head><body><header><div class="eyebrow">Nazeem Ahmed / CMO decision tools / 01</div><h1>Invest with a reason.<br>Scale with evidence.</h1><p>Marketing Investment Lab turns a proposed channel mix into an explicit budget decision. Challenge the assumptions before committing the spend.</p><a href="https://github.com/zandemha2025/marketing-investment-lab">Source & calculation tests ↗</a></header><main><p class="notice"><strong>Synthetic demonstration.</strong> All default economics and observations are illustrative. Change them to explore a decision. This is a local calculation tool; no model, analytics service or customer data connection is running.</p><form id="planner"><section class="card"><h2>1. Set the decision envelope</h2><div class="fields" id="economics"></div><h3>Allocate within channel ceilings</h3><p class="muted">Weights normalize across channels. Spend = available budget × normalized weight, capped per channel. Ceiling surplus stays unallocated; it is never silently redistributed.</p><div class="table-scroll"><table><thead><tr><th>Channel</th><th>Weight</th><th>CPC $</th><th>Click→lead %</th><th>Lead→qualified %</th><th>Qualified→win %</th><th>Ceiling $</th></tr></thead><tbody id="channels"></tbody></table></div><button type="button" id="reset" class="secondary">Reset synthetic scenario</button></section><p id="error" class="error" role="alert"></p><section class="card" aria-live="polite"><h2>2. Inspect the proposed investment</h2><div id="metrics" class="metrics"></div><div class="table-scroll"><table><thead><tr><th>Channel</th><th>Spend</th><th>Leads / qualified</th><th>Expected wins</th><th>CAC</th><th>Contribution</th></tr></thead><tbody id="results"></tbody></table></div><p id="decision" class="notice"></p><h3>Sensitivity: what if acquisition costs rise?</h3><div class="table-scroll"><table><thead><tr><th>Scenario</th><th>CPC change</th><th>Lead rate change</th><th>Expected wins</th><th>Contribution</th></tr></thead><tbody id="scenarios"></tbody></table></div></section><section class="card"><h2>3. Earn the right to scale</h2><p>One primary conversion metric. Independent, randomized users. Predeclared fixed window. Default: 5/100 control versus 10/100 treatment.</p><div class="fields" id="experimentFields"></div><label><input type="checkbox" id="complete" checked>Predeclared observation window completed</label><label><input type="checkbox" id="guardrail" checked>Quality, unsubscribe and sales-capacity guardrails passed</label><div id="experimentResult" aria-live="polite"></div><p class="muted">Approximate 95% Newcombe interval from Wilson bounds. This is not a sequential test. Repeated peeking, non-random allocation, correlated accounts, multiple comparisons and late conversions can invalidate the interpretation. A conversion lift does not establish profitable incrementality.</p></section></form><section class="card"><h2>4. Take a decision to the room</h2><button id="export">Export executive memo (.md)</button><button id="inputs" class="secondary">Export exact inputs (.json)</button><button id="print" class="secondary">Print / save PDF</button><h3>Transparent assumptions</h3><p>Expected wins = spend ÷ CPC × lead rate × qualification rate × win rate. Horizon revenue = expected wins × annual contract value × months ÷ 12. Contribution = revenue × gross margin − acquisition spend. CAC = spend ÷ wins; payback = CAC ÷ monthly gross profit per customer.</p><p>No churn, cohort ramp, attribution overlap, saturation, fixed costs, sales costs, tax or revenue lag. Fractional wins are expectations. All customers are assumed active from the beginning of the horizon. Cash collection can differ from recognized revenue.</p></section><footer>Built by Nazeem Ahmed · Portfolio demonstration of marketing judgment and implementation · <a href="https://github.com/zandemha2025/marketing-investment-lab">README, limitations and tests</a></footer></main><script type="module" src="app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Investment Lab · Marketing decisions under uncertainty</title>
+    <meta
+      name="description"
+      content="Allocate a marketing budget, compare funnel scenarios and interpret a fixed-window experiment with transparent assumptions."
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">Nazeem Ahmed / CMO decision tools / 01</div>
+      <h1>Invest with a reason.<br />Scale with evidence.</h1>
+      <p>
+        Marketing Investment Lab turns a proposed channel mix into an explicit
+        budget decision. Challenge the assumptions before committing the spend.
+      </p>
+      <a href="https://github.com/zandemha2025/marketing-investment-lab"
+        >Source & calculation tests ↗</a
+      >
+    </header>
+    <main>
+      <p class="notice">
+        <strong>Synthetic demonstration.</strong> All default economics and
+        observations are illustrative. Change them to explore a decision. This
+        is a local calculation tool; no model, analytics service or customer
+        data connection is running.
+      </p>
+      <form id="planner">
+        <section class="card">
+          <h2>1. Set the decision envelope</h2>
+          <div class="fields" id="economics"></div>
+          <h3>Allocate within channel ceilings</h3>
+          <p class="muted">
+            Weights normalize across channels. Spend = available budget ×
+            normalized weight, capped per channel. Ceiling surplus stays
+            unallocated; it is never silently redistributed.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Channel</th>
+                  <th>Weight</th>
+                  <th>CPC $</th>
+                  <th>Click→lead %</th>
+                  <th>Lead→qualified %</th>
+                  <th>Qualified→win %</th>
+                  <th>Ceiling $</th>
+                </tr>
+              </thead>
+              <tbody id="channels"></tbody>
+            </table>
+          </div>
+          <button type="button" id="reset" class="secondary">
+            Reset synthetic scenario
+          </button>
+        </section>
+        <p id="error" class="error" role="alert"></p>
+        <section class="card" aria-live="polite">
+          <h2>2. Inspect the proposed investment</h2>
+          <div id="metrics" class="metrics"></div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Channel</th>
+                  <th>Spend</th>
+                  <th>Leads / qualified</th>
+                  <th>Expected wins</th>
+                  <th>CAC</th>
+                  <th>Contribution</th>
+                </tr>
+              </thead>
+              <tbody id="results"></tbody>
+            </table>
+          </div>
+          <p id="decision" class="notice"></p>
+          <h3>Sensitivity: what if acquisition costs rise?</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Scenario</th>
+                  <th>CPC change</th>
+                  <th>Lead rate change</th>
+                  <th>Expected wins</th>
+                  <th>Contribution</th>
+                </tr>
+              </thead>
+              <tbody id="scenarios"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="card">
+          <h2>3. Earn the right to scale</h2>
+          <p>
+            One primary conversion metric. Independent, randomized users.
+            Predeclared fixed window. Default: 5/100 control versus 10/100
+            treatment.
+          </p>
+          <div class="fields" id="experimentFields"></div>
+          <label
+            ><input type="checkbox" id="complete" checked />Predeclared
+            observation window completed</label
+          ><label
+            ><input type="checkbox" id="guardrail" checked />Quality,
+            unsubscribe and sales-capacity guardrails passed</label
+          >
+          <div id="experimentResult" aria-live="polite"></div>
+          <p class="muted">
+            Approximate 95% Newcombe interval from Wilson bounds. This is not a
+            sequential test. Repeated peeking, non-random allocation, correlated
+            accounts, multiple comparisons and late conversions can invalidate
+            the interpretation. A conversion lift does not establish profitable
+            incrementality.
+          </p>
+        </section>
+      </form>
+      <section class="card">
+        <h2>4. Take a decision to the room</h2>
+        <button id="export">Export executive memo (.md)</button
+        ><button id="inputs" class="secondary">
+          Export exact inputs (.json)</button
+        ><button id="print" class="secondary">Print / save PDF</button>
+        <h3>Transparent assumptions</h3>
+        <p>
+          Expected wins = spend ÷ CPC × lead rate × qualification rate × win
+          rate. Horizon revenue = expected wins × annual contract value × months
+          ÷ 12. Contribution = revenue × gross margin − acquisition spend. CAC =
+          spend ÷ wins; payback = CAC ÷ monthly gross profit per customer.
+        </p>
+        <p>
+          No churn, cohort ramp, attribution overlap, saturation, fixed costs,
+          sales costs, tax or revenue lag. Fractional wins are expectations. All
+          customers are assumed active from the beginning of the horizon. Cash
+          collection can differ from recognized revenue.
+        </p>
+      </section>
+      <footer>
+        Built by Nazeem Ahmed · Portfolio demonstration of marketing judgment
+        and implementation ·
+        <a href="https://github.com/zandemha2025/marketing-investment-lab"
+          >README, limitations and tests</a
+        >
+      </footer>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

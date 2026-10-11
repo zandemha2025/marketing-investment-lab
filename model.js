@@ -1,22 +1,182 @@
-export const demo={budget:30000,reserve:10,acv:12000,margin:80,months:12,channels:[{name:'Search',weight:45,cpc:8,lead:5,qualified:35,win:18,cap:16000},{name:'Paid social',weight:30,cpc:5,lead:3,qualified:25,win:12,cap:12000},{name:'Partner placements',weight:25,cpc:6,lead:4,qualified:40,win:20,cap:10000}]};
-const positive=(x,n,zero=true)=>{if(!Number.isFinite(x)||x<(zero?0:Number.EPSILON))throw Error(`${n} must be ${zero?'nonnegative':'positive'}.`);return x;};
-const pct=(x,n)=>{positive(x,n);if(x>100)throw Error(`${n} must be at most 100%.`);return x/100;};
-export function forecast(s,conversionFactor=1,costFactor=1){
- positive(s.budget,'Budget');const reserve=pct(s.reserve,'Reserve'),margin=pct(s.margin,'Margin');positive(s.acv,'Annual contract value',false);positive(s.months,'Observation months',false);if(s.months>12)throw Error('Forecast horizon must be 1–12 months.');
- positive(conversionFactor,'Conversion factor');positive(costFactor,'Cost factor',false);
- const totalWeight=s.channels.reduce((t,c)=>t+positive(c.weight,'Weight'),0);if(totalWeight===0)throw Error('At least one channel needs a positive weight.');
- const rows=s.channels.map(c=>{positive(c.cpc,'CPC',false);positive(c.cap,'Spend ceiling');const spend=Math.min(s.budget*(1-reserve)*c.weight/totalWeight,c.cap);const clicks=spend/(c.cpc*costFactor);const leads=clicks*Math.min(1,pct(c.lead,'Lead rate')*conversionFactor);const qualified=leads*pct(c.qualified,'Qualification rate');const customers=qualified*pct(c.win,'Win rate');const revenue=customers*s.acv*s.months/12;const gross=revenue*margin;return {...c,spend,clicks,leads,qualified,customers,revenue,gross,contribution:gross-spend,cac:customers?spend/customers:null,payback:customers&&margin?spend/customers/(s.acv*margin/12):null};});
- const sums=Object.fromEntries(['spend','clicks','leads','qualified','customers','revenue','gross','contribution'].map(k=>[k,rows.reduce((t,r)=>t+r[k],0)]));
- return {...sums,rows,unallocated:s.budget-sums.spend,cac:sums.customers?sums.spend/sums.customers:null,payback:sums.customers&&margin?sums.spend/sums.customers/(s.acv*margin/12):null};
+export const demo = {
+  budget: 30000,
+  reserve: 10,
+  acv: 12000,
+  margin: 80,
+  months: 12,
+  channels: [
+    {
+      name: "Search",
+      weight: 45,
+      cpc: 8,
+      lead: 5,
+      qualified: 35,
+      win: 18,
+      cap: 16000,
+    },
+    {
+      name: "Paid social",
+      weight: 30,
+      cpc: 5,
+      lead: 3,
+      qualified: 25,
+      win: 12,
+      cap: 12000,
+    },
+    {
+      name: "Partner placements",
+      weight: 25,
+      cpc: 6,
+      lead: 4,
+      qualified: 40,
+      win: 20,
+      cap: 10000,
+    },
+  ],
+};
+const positive = (x, n, zero = true) => {
+  if (!Number.isFinite(x) || x < (zero ? 0 : Number.EPSILON))
+    throw Error(`${n} must be ${zero ? "nonnegative" : "positive"}.`);
+  return x;
+};
+const pct = (x, n) => {
+  positive(x, n);
+  if (x > 100) throw Error(`${n} must be at most 100%.`);
+  return x / 100;
+};
+export function forecast(s, conversionFactor = 1, costFactor = 1) {
+  positive(s.budget, "Budget");
+  const reserve = pct(s.reserve, "Reserve"),
+    margin = pct(s.margin, "Margin");
+  positive(s.acv, "Annual contract value", false);
+  positive(s.months, "Observation months", false);
+  if (!Number.isInteger(s.months) || s.months < 1 || s.months > 12)
+    throw Error("Forecast horizon must be 1–12 whole months.");
+  if (
+    !Array.isArray(s.channels) ||
+    !s.channels.length ||
+    s.channels.length > 20
+  )
+    throw Error("Use 1–20 channels.");
+  positive(conversionFactor, "Conversion factor");
+  positive(costFactor, "Cost factor", false);
+  const totalWeight = s.channels.reduce(
+    (t, c) => t + positive(c.weight, "Weight"),
+    0,
+  );
+  if (totalWeight === 0)
+    throw Error("At least one channel needs a positive weight.");
+  const rows = s.channels.map((c) => {
+    if (!c.name?.trim()) throw Error("Channel names are required.");
+    positive(c.cpc, "CPC", false);
+    positive(c.cap, "Spend ceiling");
+    const spend = Math.min(
+      (s.budget * (1 - reserve) * c.weight) / totalWeight,
+      c.cap,
+    );
+    const clicks = spend / (c.cpc * costFactor);
+    const leads =
+      clicks * Math.min(1, pct(c.lead, "Lead rate") * conversionFactor);
+    const qualified = leads * pct(c.qualified, "Qualification rate");
+    const customers = qualified * pct(c.win, "Win rate");
+    const revenue = (customers * s.acv * s.months) / 12;
+    const gross = revenue * margin;
+    return {
+      ...c,
+      spend,
+      clicks,
+      leads,
+      qualified,
+      customers,
+      revenue,
+      gross,
+      contribution: gross - spend,
+      cac: customers ? spend / customers : null,
+      payback:
+        customers && margin
+          ? spend / customers / ((s.acv * margin) / 12)
+          : null,
+    };
+  });
+  const sums = Object.fromEntries(
+    [
+      "spend",
+      "clicks",
+      "leads",
+      "qualified",
+      "customers",
+      "revenue",
+      "gross",
+      "contribution",
+    ].map((k) => [k, rows.reduce((t, r) => t + r[k], 0)]),
+  );
+  return {
+    ...sums,
+    rows,
+    unallocated: s.budget - sums.spend,
+    cac: sums.customers ? sums.spend / sums.customers : null,
+    payback:
+      sums.customers && margin
+        ? sums.spend / sums.customers / ((s.acv * margin) / 12)
+        : null,
+  };
 }
-export function experiment({aN,aX,bN,bX,mde,complete,guardrail}){
- for(const [k,v] of Object.entries({aN,aX,bN,bX}))if(!Number.isInteger(v)||v<0)throw Error(`${k} must be a nonnegative integer.`);
- if(!aN||!bN||aX>aN||bX>bN)throw Error('Each arm needs observations; conversions cannot exceed observations.');const threshold=pct(mde,'Minimum practical lift');
- const a=aX/aN,b=bX/bN,diff=b-a;
- // shortcut: Newcombe interval from independent Wilson bounds; replace with sequential/cluster methods for other designs.
- const wilson=(x,n)=>{const p=x/n,z=1.96,den=1+z*z/n,center=(p+z*z/(2*n))/den,half=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n))/den;return [center-half,center+half];};
- const [al,au]=wilson(aX,aN),[bl,bu]=wilson(bX,bN);const low=diff-Math.sqrt((au-a)**2+(b-bl)**2),high=diff+Math.sqrt((a-al)**2+(bu-b)**2);
- const verdict=!complete?'Wait: observation window incomplete':!guardrail?'Hold: guardrail failed':low>threshold?'Candidate to scale: interval clears practical threshold':high<0?'Stop: treatment likely harms conversion':'Inconclusive: collect planned evidence';
- return {a,b,diff,low,high,threshold,verdict};
+export function experiment({ aN, aX, bN, bX, mde, complete, guardrail }) {
+  for (const [k, v] of Object.entries({ aN, aX, bN, bX }))
+    if (!Number.isInteger(v) || v < 0)
+      throw Error(`${k} must be a nonnegative integer.`);
+  if (!aN || !bN || aX > aN || bX > bN)
+    throw Error(
+      "Each arm needs observations; conversions cannot exceed observations.",
+    );
+  const threshold = pct(mde, "Minimum practical lift");
+  const a = aX / aN,
+    b = bX / bN,
+    diff = b - a;
+  // shortcut: Newcombe interval from independent Wilson bounds; replace with sequential/cluster methods for other designs.
+  const wilson = (x, n) => {
+    const p = x / n,
+      z = 1.96,
+      den = 1 + (z * z) / n,
+      center = (p + (z * z) / (2 * n)) / den,
+      half = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / den;
+    return [center - half, center + half];
+  };
+  const [al, au] = wilson(aX, aN),
+    [bl, bu] = wilson(bX, bN);
+  const low = diff - Math.sqrt((au - a) ** 2 + (b - bl) ** 2),
+    high = diff + Math.sqrt((a - al) ** 2 + (bu - b) ** 2);
+  const verdict = !complete
+    ? "Wait: observation window incomplete"
+    : !guardrail
+      ? "Hold: guardrail failed"
+      : low > threshold
+        ? "Candidate to scale: interval clears practical threshold"
+        : high < 0
+          ? "Stop: treatment likely harms conversion"
+          : "Inconclusive: collect planned evidence";
+  return {
+    a,
+    b,
+    diff,
+    low,
+    high,
+    threshold,
+    verdict,
+    observations: { aN, aX, bN, bX, mde, complete, guardrail },
+  };
 }
-export function memo(s,f,e){return `# Marketing investment decision memo\n\nIllustrative planning model — no measured customer results.\n\n## Decision\nDeploy $${f.spend.toFixed(0)}; keep $${f.unallocated.toFixed(0)} unallocated (reserve plus channel ceilings). Forecast contribution: $${f.contribution.toFixed(0)} over ${s.months} months. Expected customers: ${f.customers.toFixed(1)}. CAC: ${f.cac===null?'undefined':f.cac.toFixed(0)}.\n\n## Allocation\n${f.rows.map(r=>`- ${r.name}: $${r.spend.toFixed(0)}; ${r.customers.toFixed(1)} expected customers; $${r.contribution.toFixed(0)} contribution`).join('\n')}\n\n## Experiment decision\n${e.verdict}. Absolute lift ${(e.diff*100).toFixed(1)} percentage points; approximate 95% interval ${(e.low*100).toFixed(1)} to ${(e.high*100).toFixed(1)} pp. Practical threshold ${(e.threshold*100).toFixed(1)} pp.\n\n## Assumptions and limits\nAnnual value $${s.acv}; gross margin ${s.margin}%; all acquired customers start at horizon beginning. No cohort ramp, churn, attribution overlap, saturation, fixed costs, tax or sales costs. Channel CPC and rates are synthetic editable assumptions, not benchmarks. Fixed weights with ceilings leave budget unspent; no optimizer or causal forecast. Do not scale before checking sales capacity and incremental demand. Experiment assumes independent randomized users, a predeclared fixed window and one primary comparison; no repeated-peeking or multiple-testing correction.\n\n## Inputs (reproducible)\n\`\`\`json\n${JSON.stringify(s,null,2)}\n\`\`\`\n`;}
+export function memo(s, f, e) {
+  return `# Marketing investment decision memo\n\nIllustrative planning model — no measured customer results.\n\n## Decision\nDeploy $${f.spend.toFixed(0)}; keep $${f.unallocated.toFixed(0)} unallocated (reserve plus channel ceilings). Forecast contribution: $${f.contribution.toFixed(0)} over ${s.months} months. Expected customers: ${f.customers.toFixed(1)}. CAC: ${f.cac === null ? "undefined" : f.cac.toFixed(0)}.\n\n## Allocation\n${f.rows.map((r) => `- ${r.name}: $${r.spend.toFixed(0)}; ${r.customers.toFixed(1)} expected customers; $${r.contribution.toFixed(0)} contribution`).join("\n")}\n\n## Sensitivity comparison\n${[
+    ["Downside", 0.8, 1.2],
+    ["Base", 1, 1],
+    ["Upside", 1.2, 0.8],
+  ]
+    .map(([n, c, k]) => {
+      const x = forecast(s, c, k);
+      return `- ${n}: CPC ${Math.round((k - 1) * 100)}%; lead-rate ${Math.round((c - 1) * 100)}%; contribution $${x.contribution.toFixed(0)}`;
+    })
+    .join(
+      "\n",
+    )}\n\n## Experiment decision\n${e.verdict}. Absolute lift ${(e.diff * 100).toFixed(1)} percentage points; approximate 95% interval ${(e.low * 100).toFixed(1)} to ${(e.high * 100).toFixed(1)} pp. Practical threshold ${(e.threshold * 100).toFixed(1)} pp.\n\n## Assumptions and limits\nAnnual value $${s.acv}; gross margin ${s.margin}%; all acquired customers start at horizon beginning. No cohort ramp, churn, attribution overlap, saturation, fixed costs, tax or sales costs. Channel CPC and rates are synthetic editable assumptions, not benchmarks. Fixed weights with ceilings leave budget unspent; no optimizer or causal forecast. Do not scale before checking sales capacity and incremental demand. Experiment assumes independent randomized users, a predeclared fixed window and one primary comparison; no repeated-peeking or multiple-testing correction.\n\n## Experiment observations and gates\n${JSON.stringify(e.observations, null, 2)}\n\n## Inputs (reproducible)\n\`\`\`json\n${JSON.stringify(s, null, 2)}\n\`\`\`\n`;
+}
